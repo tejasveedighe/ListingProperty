@@ -1,7 +1,9 @@
 ﻿using ListingProperty.Data;
+using ListingProperty.Helper;
 using ListingProperty.Models;
 using ListingProperty.Repository.Implementation;
 using ListingProperty.Repository.Interface;
+using ListingProperty.ViewModal;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
@@ -138,7 +140,7 @@ namespace ListingProperty.Controllers
                                           Status = property.Status,
                                           DateListed = property.DateListed,
                                           DateUpdated = property.DateUpdated,
-                                          Approved =property.Approved,
+                                          Approved = property.Approved,
 
 
                                           ImageId = img != null ? img.Id : -1,
@@ -154,7 +156,7 @@ namespace ListingProperty.Controllers
 
 
 
-      
+
 
         [HttpPost]
         [Route("/searchProperty")]
@@ -248,16 +250,16 @@ namespace ListingProperty.Controllers
 
             var query = _context.lpProperty.AsQueryable();
 
-           
+
             if (!string.IsNullOrEmpty(searchCriteria.Status))
             {
                 query = query.Where(p => p.Status == searchCriteria.Status);
             }
 
-          
+
             var searchResults = await query.ToListAsync();
 
-          
+
             var saleProperties = searchResults
                 .Where(p => p.Status == "Sale")
                 .Select(property => new
@@ -273,7 +275,7 @@ namespace ListingProperty.Controllers
                         .ToList(),
                     ContactNumber = property.ContactNumber,
                     Status = property.Status
-                    
+
                 })
                 .ToList();
 
@@ -363,21 +365,20 @@ namespace ListingProperty.Controllers
 
         }
 
+        /// <summary>
+        /// Add propertis api
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("/property")]
         public async Task<IActionResult> AddProperty([FromBody] Property property)
         {
 
-
-
             if (property == null)
             {
                 return NotFound();
             }
-
-
-
-
             _context.lpProperty.Add(property);
             await _context.SaveChangesAsync();
 
@@ -488,12 +489,6 @@ namespace ListingProperty.Controllers
             return Ok(propertyResponseDTOs);
         }
 
-   
-
-
-
-
-
         [HttpPost]
         [Route("/login")]
         [AllowAnonymous]
@@ -516,20 +511,20 @@ namespace ListingProperty.Controllers
             }
             else
             {
-               
+
                 response = Ok(new { message = "User does not exist" });
             }
 
             return response;
 
-           
+
 
 
         }
 
         User AuthenticateUser(User loginCredentials)
         {
-           
+
             User user = _context.LpUser.FirstOrDefault(x => x.Email == loginCredentials.Email && x.Password == loginCredentials.Password);
             return user;
         }
@@ -589,5 +584,30 @@ namespace ListingProperty.Controllers
         }
 
 
+        [HttpPost]
+        [Route("/contactapproval")]
+        public async Task<IActionResult> ContactApproval([FromBody] ContactApproverDTO contactApproverDTO)
+        {
+            try
+            {
+                var convertedData = ModalConverter.ContactApproverDTOToContactApproval(contactApproverDTO);
+                if (convertedData == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                       "Error Saving data");
+                }
+
+                _context.LpContactApproval.Add(convertedData);
+                await _context.SaveChangesAsync();
+                return Ok();
+                //return Ok("Saved Successfully");
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                       "Error deleting data");
+            }
+        }
     }
 }
