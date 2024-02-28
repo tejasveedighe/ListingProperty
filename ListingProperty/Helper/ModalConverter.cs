@@ -11,8 +11,8 @@ namespace ListingProperty.Helper
             {
                 UserId = contactApproverDTO.UserId,
                 PropertyId = contactApproverDTO.PropertyId,
-                ApprovalStatus = false,
-                CreatedOn = contactApproverDTO.CreatedOn
+                CreatedOn = contactApproverDTO.CreatedOn,
+                ApprovalStatus = Enums.ApprovalStatus.PendingApproval
             };
         }
     }

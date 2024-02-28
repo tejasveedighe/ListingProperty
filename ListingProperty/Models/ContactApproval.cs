@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ListingProperty.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace ListingProperty.Models
 {
@@ -8,10 +9,9 @@ namespace ListingProperty.Models
         public int ContactApprovalId { get; set; }
         public int UserId { get; set; }
         public int PropertyId { get; set; }
-        public bool ApprovalStatus { get; set; }
+        public ApprovalStatus ApprovalStatus { get; set; }
         public  DateTime CreatedOn { get; set; }
         public DateTime? UpdatedOn { get; set; }
-
         public User User { get; set; }
         public Property Property { get; set; }
     }

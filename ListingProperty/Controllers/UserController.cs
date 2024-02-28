@@ -19,11 +19,6 @@ using System.Text;
 
 namespace ListingProperty.Controllers
 {
-
-
-
-
-
     public class UserController : Controller
     {
         private readonly AppContextDb _context;
@@ -38,18 +33,10 @@ namespace ListingProperty.Controllers
             _webHostEnvironment = webHostEnvironment;
             _photoService = photoService;
         }
-
-
-
-
-
         public IActionResult Index()
         {
             return View();
         }
-
-
-
 
         [HttpGet]
         [Route("/user")]
@@ -74,7 +61,6 @@ namespace ListingProperty.Controllers
             return Ok(user);
 
         }
-
 
         [HttpPost]
         [Route("/AddUser")]
@@ -110,9 +96,6 @@ namespace ListingProperty.Controllers
             }
             return Ok(user);
         }
-
-
-
 
         [HttpGet]
         [Route("/getAllproperty")]
@@ -152,11 +135,6 @@ namespace ListingProperty.Controllers
 
 
         }
-
-
-
-
-
 
         [HttpPost]
         [Route("/searchProperty")]
@@ -282,8 +260,6 @@ namespace ListingProperty.Controllers
             return Ok(saleProperties);
         }
 
-
-
         [HttpPost]
         [Route("/RentProperty")]
         public async Task<IActionResult> RentProperty([FromBody] BuyRentModel searchCriteria)
@@ -327,8 +303,6 @@ namespace ListingProperty.Controllers
             return Ok(saleProperties);
         }
 
-
-
         [HttpPut]
         [Route("/property/approve/{id}")]
         public async Task<IActionResult> ApproveProperty(int id)
@@ -354,15 +328,46 @@ namespace ListingProperty.Controllers
         }
 
         [HttpGet]
-        [Route("/Property/{id}")]
-        public async Task<IActionResult> GetPropertyById(int id)
+        [Route("/Property/{userId}/{propertyId}")]
+        public async Task<IActionResult> GetPropertyById(int userId,int propertyId)
         {
+            var product = await _context.lpProperty.FirstOrDefaultAsync(w => w.PropertyId == propertyId);
+            var propertyStatus = await _context.LpContactApproval.FirstOrDefaultAsync(x => x.UserId == userId && x.PropertyId == propertyId);
+            var response = new GetPropertiesRS()
+            {
+                PropertyId = product.PropertyId,
+                UserId = product.UserId,
+                PropertyTitle = product.PropertyTitle,
+                Price = product.Price,
+                PropertyType = product.PropertyType,
+                FavoriteProperty = product.FavoriteProperty,
+                Location = product.Location,
+                NoBedroom = product.NoBedroom,
+                NoBathroom = product.NoBathroom,
+                SquareFeet = product.SquareFeet,
+                Description = product.Description
+                
 
+            };
+            // case to check is there a entry in table related to propertyId and userId, if not then assign new as approval status
+            if (propertyStatus == null)
+            {
+                response.ApprovalStatus = Enums.ApprovalStatus.New;
+            }
 
-            var product = await _context.lpProperty.FirstOrDefaultAsync(w => w.PropertyId == id);
+            else if (propertyStatus.ApprovalStatus == Enums.ApprovalStatus.Approved)
+            {
+                response.ContactNumber = product.ContactNumber;
+                //
+                //some more data
+            }
 
-            return Ok(product);
-
+            //If there is a entry in table then copy status of approval record into our response so it can be used on frontend to show and hide button and contact details
+            else
+            {
+                response.ApprovalStatus = propertyStatus.ApprovalStatus;
+            }
+            return Ok(response);
         }
 
         /// <summary>
@@ -385,8 +390,6 @@ namespace ListingProperty.Controllers
 
             return Ok(property);
         }
-
-
 
         [HttpDelete]
         [Route("/property/{propertyId}")]
@@ -512,7 +515,8 @@ namespace ListingProperty.Controllers
             else
             {
 
-                response = Ok(new { message = "User does not exist" });
+                response = StatusCode(StatusCodes.Status404NotFound,
+                       "User not exist");
             }
 
             return response;
@@ -521,14 +525,12 @@ namespace ListingProperty.Controllers
 
 
         }
-
         User AuthenticateUser(User loginCredentials)
         {
 
             User user = _context.LpUser.FirstOrDefault(x => x.Email == loginCredentials.Email && x.Password == loginCredentials.Password);
             return user;
         }
-
 
         string GenerateToken(User user)
         {
@@ -583,7 +585,6 @@ namespace ListingProperty.Controllers
             }
         }
 
-
         [HttpPost]
         [Route("/contactapproval")]
         public async Task<IActionResult> ContactApproval([FromBody] ContactApproverDTO contactApproverDTO)
@@ -599,7 +600,7 @@ namespace ListingProperty.Controllers
 
                 _context.LpContactApproval.Add(convertedData);
                 await _context.SaveChangesAsync();
-                return Ok();
+                return Ok(convertedData);
                 //return Ok("Saved Successfully");
             }
             catch (Exception)
