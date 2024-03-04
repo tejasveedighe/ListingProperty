@@ -591,9 +591,7 @@ namespace ListingProperty.Controllers
 
         [HttpPost]
         [Route("/contactapproval")]
-        public async Task<IActionResult> ContactApproval(
-                [FromBody] ContactApproverDTO contactApproverDTO
-                )
+        public async Task<IActionResult> ContactApproval([FromBody] ContactApproverDTO contactApproverDTO)
         {
             try
             {
@@ -639,5 +637,22 @@ namespace ListingProperty.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("adminaction")]
+        public ActionResult AdminApproval([FromBody] AdminRequestDTO adminRequestDTO ) 
+        {
+            try
+            {
+                var adminResp =  _context.LpContactApproval.FirstOrDefault(x=>x.UserId==adminRequestDTO.UserId && x.PropertyId == adminRequestDTO.PropertyId);
+                adminResp.ApprovalStatus = adminRequestDTO.ApprovalStatus;
+                _context.SaveChanges();
+                return Ok(true);
+            }
+            catch (Exception)
+            {
+                return Ok(false);
+                //throw;
+            }
+        }
     }
 }
