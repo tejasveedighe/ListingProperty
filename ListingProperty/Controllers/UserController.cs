@@ -322,52 +322,33 @@ namespace ListingProperty.Controllers
             }
         }
 
-        //[HttpGet]
-        //[Route("/Property/{userId}/{propertyId}")]
-        //public async Task<IActionResult> GetPropertyForUserById(int userId, int propertyId)
-        //{
-        //    var product = await _context.lpProperty.FirstOrDefaultAsync(w =>
-        //        w.PropertyId == propertyId
-        //    );
-        //    var propertyStatus = await _context.LpContactApproval.FirstOrDefaultAsync(x =>
-        //        x.UserId == userId && x.PropertyId == propertyId
-        //    );
-        //    var response = new GetPropertiesRS()
-        //    {
-        //        PropertyId = product.PropertyId,
-        //        UserId = product.UserId,
-        //        PropertyTitle = product.PropertyTitle,
-        //        Price = product.Price,
-        //        PropertyType = product.PropertyType,
-        //        FavoriteProperty = product.FavoriteProperty,
-        //        Location = product.Location,
-        //        NoBedroom = product.NoBedroom,
-        //        NoBathroom = product.NoBathroom,
-        //        SquareFeet = product.SquareFeet,
-        //        Description = product.Description
-        //    };
-        //    // case to check is there a entry in table related to propertyId and userId, if not then assign new as approval status
-        //    if (propertyStatus == null)
-        //    {
-        //        response.ApprovalStatus = Enums.ApprovalStatus.New;
-        //    }
-        //    else if (propertyStatus.ApprovalStatus == Enums.ApprovalStatus.Approved)
-        //    {
-        //        response.ContactNumber = product.ContactNumber;
-        //        //
-        //        //some more data
-        //    }
-        //    //If there is a entry in table then copy status of approval record into our response so it can be used on frontend to show and hide button and contact details
-        //    else
-        //    {
-        //        response.ApprovalStatus = propertyStatus.ApprovalStatus;
-        //    }
-        //    return Ok(response);
-        //}
+        [HttpGet]
+        [Route("/Property/{propertyId}")]
+        public async Task<IActionResult> GetPropertyById(int propertyId)
+        {
+            var product = await _context.lpProperty.FirstOrDefaultAsync(w =>
+                w.PropertyId == propertyId
+            );
+            var response = new GetPropertiesRS()
+            {
+                PropertyId = product.PropertyId,
+                UserId = product.UserId,
+                PropertyTitle = product.PropertyTitle,
+                Price = product.Price,
+                PropertyType = product.PropertyType,
+                FavoriteProperty = product.FavoriteProperty,
+                Location = product.Location,
+                NoBedroom = product.NoBedroom,
+                NoBathroom = product.NoBathroom,
+                SquareFeet = product.SquareFeet,
+                Description = product.Description
+            };
+            return Ok(response);
+        }
 
         [HttpGet]
         [Route("/Property/{userId}/{propertyId}")]
-        public async Task<IActionResult> GetPropertyById(int userId, int propertyId)
+        public async Task<IActionResult> GetPropertyByUserId(int userId, int propertyId)
         {
             var product = await _context.lpProperty.FirstOrDefaultAsync(w => w.PropertyId == propertyId);
             var propertyStatus = await _context.LpContactApproval.FirstOrDefaultAsync(x => x.UserId == userId && x.PropertyId == propertyId);
