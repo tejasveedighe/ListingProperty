@@ -53,6 +53,8 @@ builder.Services.AddAuthorization(config =>
 {
     config.AddPolicy(Policies.Admin, Policies.AdminPolicy());
     config.AddPolicy(Policies.User, Policies.UserPolicy());
+    config.AddPolicy(Policies.Buyer, Policies.BuyerPolicy());
+    config.AddPolicy(Policies.Seller, Policies.SellerPolicy());
 });
 
 builder.Services.AddEndpointsApiExplorer();
