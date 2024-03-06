@@ -66,26 +66,34 @@ namespace ListingProperty.Controllers
         {
             try
             {
-                if (user.UserType == "Admin")
-                {
-                    var RegisterUser = new User
-                    {
-                        UserType = "User",
-                        Email = user.Email,
-                        Name = user.Name,
-                        Password = user.Password
-                    };
+                var existingUser = _context.LpUser.FirstOrDefault(u => u.Email == user.Email);
 
-                    _context.LpUser.Add(RegisterUser);
+                if (existingUser != null)
+                {
+                    return BadRequest(new { message = "User with this email already exists." });
                 }
+
+                // Proceed to add the user if it doesn't exist
+                var newUser = new User
+                {
+                    UserType = user.UserType,
+                    Email = user.Email,
+                    Name = user.Name,
+                    Password = user.Password,
+                    Phone = user.Phone
+                };
+
+                _context.LpUser.Add(newUser);
                 await _context.SaveChangesAsync();
+
+                return Ok(newUser);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex);
+                return StatusCode(500, new { message = ex.Message });
             }
-            return Ok(user);
         }
+
 
         [HttpGet]
         [Route("/getAllproperty")]
@@ -639,11 +647,11 @@ namespace ListingProperty.Controllers
 
         [HttpPost]
         [Route("adminaction")]
-        public ActionResult AdminApproval([FromBody] AdminRequestDTO adminRequestDTO ) 
+        public ActionResult AdminApproval([FromBody] AdminRequestDTO adminRequestDTO)
         {
             try
             {
-                var adminResp =  _context.LpContactApproval.FirstOrDefault(x=>x.UserId==adminRequestDTO.UserId && x.PropertyId == adminRequestDTO.PropertyId);
+                var adminResp = _context.LpContactApproval.FirstOrDefault(x => x.UserId == adminRequestDTO.UserId && x.PropertyId == adminRequestDTO.PropertyId);
                 adminResp.ApprovalStatus = adminRequestDTO.ApprovalStatus;
                 _context.SaveChanges();
                 return Ok(true);

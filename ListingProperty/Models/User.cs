@@ -28,7 +28,11 @@ namespace ListingProperty.Models
         public string UserType { get; set; } = "Admin";
 
 
-        public FavoriteProperty FavoriteProperty { get; set; } 
+        public FavoriteProperty FavoriteProperty { get; set; }
+
+        [Required(ErrorMessage = "Number must be 10 digits")]
+        [StringLength(10, ErrorMessage = "Number must be 10 digits")]
+        public string Phone { get; set; }
 
     }
 }
