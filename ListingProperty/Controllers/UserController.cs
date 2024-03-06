@@ -640,6 +640,8 @@ namespace ListingProperty.Controllers
                     PropertyId = request.PropertyId,
                     PropertyTitle = request.Property.PropertyTitle,
                     ApprovalStatus = request.ApprovalStatus,
+                    CreatedOn = request.CreatedOn,
+                    UpdatedOn = request.UpdatedOn
                 }).ToListAsync();
 
             return Ok(result);
