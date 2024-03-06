@@ -52,8 +52,8 @@ namespace ListingProperty.Controllers
         }
 
         [HttpGet]
-        [Route("/userDetailss/{userId}")]
-        public async Task<IActionResult> GetUserByEmail(int userId)
+        [Route("/userDetails/{userId}")]
+        public async Task<IActionResult> GetUserById(int userId)
         {
             var userDetail = await _context.LpUser.Where(w => w.UserId == userId).Select(u => new
             {
