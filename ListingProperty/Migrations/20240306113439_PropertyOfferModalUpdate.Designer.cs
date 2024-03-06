@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ListingProperty.Migrations
 {
     [DbContext(typeof(AppContextDb))]
-    [Migration("20240306094844_PropertyOfferModal")]
-    partial class PropertyOfferModal
+    [Migration("20240306113439_PropertyOfferModalUpdate")]
+    partial class PropertyOfferModalUpdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -119,6 +119,9 @@ namespace ListingProperty.Migrations
                     b.Property<bool>("AdminApproved")
                         .HasColumnType("bit");
 
+                    b.Property<int>("BuyerId")
+                        .HasColumnType("int");
+
                     b.Property<int>("OfferCompleted")
                         .HasColumnType("int");
 
@@ -132,8 +135,14 @@ namespace ListingProperty.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("SellerApproved")
                         .HasColumnType("bit");
+
+                    b.Property<int>("SellerId")
+                        .HasColumnType("int");
 
                     b.HasKey("OfferId");
 

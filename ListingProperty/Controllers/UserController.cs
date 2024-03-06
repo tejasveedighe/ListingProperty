@@ -652,5 +652,66 @@ namespace ListingProperty.Controllers
                 //throw;
             }
         }
+
+
+        [HttpPost]
+        [Route("/sendOffer")]
+        public async Task<IActionResult> SendOffer([FromBody] OfferModal offer)
+        {
+            if (offer == null)
+            {
+                return BadRequest("Offer data is missing.");
+            }
+
+            // Check if the property and buyer exist
+            var property = await _context.lpProperty.FindAsync(offer.PropertyId);
+            var buyer = await _context.LpUser.FindAsync(offer.BuyerId);
+
+            if (property == null || buyer == null)
+            {
+                return NotFound("Property or buyer not found.");
+            }
+
+            // Create the offer entity
+            var newOffer = new OfferModal
+            {
+                OfferPrice = offer.OfferPrice,
+                OfferText = offer.OfferText,
+                OfferLastDate = offer.OfferLastDate,
+                SellerApproved = offer.SellerApproved,
+                AdminApproved = offer.AdminApproved,
+                OfferCompleted = offer.OfferCompleted,
+                PropertyId = offer.PropertyId,
+                SellerId = offer.SellerId,
+                BuyerId = offer.BuyerId
+            };
+
+            // Add the offer to the context
+            _context.LpPropertyOffers.Add(newOffer);
+
+            // Save changes to the database
+            await _context.SaveChangesAsync();
+
+            return Ok("Offer sent successfully.");
+        }
+
+        [HttpGet]
+        [Route("/getOfferById")]
+        public async Task<IActionResult> GetOfferById(int propertyId, int userId)
+        {
+            // Check if an offer exists for the specified property and user
+            var existingOffer = await _context.LpPropertyOffers
+                .FirstOrDefaultAsync(o => o.PropertyId == propertyId && o.BuyerId == userId);
+
+            if (existingOffer != null)
+            {
+                return Ok(existingOffer);
+            }
+            else
+            {
+                return Ok("No offer exists for this property and user.");
+            }
+        }
+
     }
 }

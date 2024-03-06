@@ -14,5 +14,9 @@ namespace ListingProperty.Models
         public bool AdminApproved { get; set; }
         public int OfferCompleted { get; set; }
 
+        public int PropertyId { get; set; }
+        public int SellerId { get; set; }
+        public int BuyerId { get; set; }
+
     }
 }
