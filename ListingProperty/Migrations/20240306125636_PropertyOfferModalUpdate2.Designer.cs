@@ -4,6 +4,7 @@ using ListingProperty.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ListingProperty.Migrations
 {
     [DbContext(typeof(AppContextDb))]
-    partial class AppContextDbModelSnapshot : ModelSnapshot
+    [Migration("20240306125636_PropertyOfferModalUpdate2")]
+    partial class PropertyOfferModalUpdate2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -113,8 +116,8 @@ namespace ListingProperty.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OfferId"));
 
-                    b.Property<int>("AdminStatus")
-                        .HasColumnType("int");
+                    b.Property<bool>("AdminStatus")
+                        .HasColumnType("bit");
 
                     b.Property<int>("BuyerId")
                         .HasColumnType("int");
@@ -138,8 +141,8 @@ namespace ListingProperty.Migrations
                     b.Property<int>("SellerId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SellerStatus")
-                        .HasColumnType("int");
+                    b.Property<bool>("SellerStatus")
+                        .HasColumnType("bit");
 
                     b.HasKey("OfferId");
 

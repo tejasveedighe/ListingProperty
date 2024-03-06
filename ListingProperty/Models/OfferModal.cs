@@ -10,9 +10,9 @@ namespace ListingProperty.Models
         public int OfferPrice { get; set; }
         public string OfferText { get; set; }
         public DateTime OfferLastDate { get; set; }
-        public bool SellerApproved { get; set; }
-        public bool AdminApproved { get; set; }
-        public int OfferCompleted { get; set; }
+        public Enums.ApprovalStatus SellerStatus { get; set; }
+        public Enums.ApprovalStatus AdminStatus { get; set; }
+        public Enums.ApprovalStatus OfferStatus { get; set; }
 
         public int PropertyId { get; set; }
         public int SellerId { get; set; }

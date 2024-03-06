@@ -678,9 +678,9 @@ namespace ListingProperty.Controllers
                 OfferPrice = offer.OfferPrice,
                 OfferText = offer.OfferText,
                 OfferLastDate = offer.OfferLastDate,
-                SellerApproved = offer.SellerApproved,
-                AdminApproved = offer.AdminApproved,
-                OfferCompleted = offer.OfferCompleted,
+                SellerStatus = Enums.ApprovalStatus.PendingApproval,
+                AdminStatus = Enums.ApprovalStatus.PendingApproval,
+                OfferStatus = Enums.ApprovalStatus.PendingApproval,
                 PropertyId = offer.PropertyId,
                 SellerId = offer.SellerId,
                 BuyerId = offer.BuyerId
@@ -713,5 +713,33 @@ namespace ListingProperty.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("/getOffersById")]
+        public async Task<IActionResult> GetOffersById(int UserId, string UserType)
+        {
+            List<OfferModal> offers;
+
+            if (UserType == "Seller")
+            {
+                offers = await _context.LpPropertyOffers.Where(o => o.SellerId == UserId).ToListAsync();
+            }
+            else if (UserType == "Buyer") // Corrected condition for buyer
+            {
+                offers = await _context.LpPropertyOffers.Where(o => o.BuyerId == UserId).ToListAsync();
+            }
+            else
+            {
+                return BadRequest("Invalid user type."); // Handle invalid user type
+            }
+
+            if (offers.Any()) // condition for checking if offers exist
+            {
+                return Ok(offers);
+            }
+            else
+            {
+                return NotFound("No offers found.");
+            }
+        }
     }
 }
