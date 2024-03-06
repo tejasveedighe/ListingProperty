@@ -105,6 +105,38 @@ namespace ListingProperty.Migrations
                     b.ToTable("LpImages");
                 });
 
+            modelBuilder.Entity("ListingProperty.Models.OfferModal", b =>
+                {
+                    b.Property<int>("OfferId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OfferId"));
+
+                    b.Property<bool>("AdminApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OfferCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("OfferLastDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OfferPrice")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OfferText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("SellerApproved")
+                        .HasColumnType("bit");
+
+                    b.HasKey("OfferId");
+
+                    b.ToTable("LpPropertyOffers");
+                });
+
             modelBuilder.Entity("ListingProperty.Models.Property", b =>
                 {
                     b.Property<int>("PropertyId")

@@ -17,6 +17,7 @@ namespace ListingProperty.Data
         public DbSet<FavoriteProperty> LpFavProperty { get; set; }
         public DbSet<Image> LpImages { get; set; }
         public DbSet<ContactApproval> LpContactApproval { get; set; }
+        public DbSet<OfferModal> LpPropertyOffers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

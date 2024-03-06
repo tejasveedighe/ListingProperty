@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ListingProperty.Migrations
 {
     [DbContext(typeof(AppContextDb))]
-    [Migration("20240220125947_in")]
-    partial class @in
+    [Migration("20240306094844_PropertyOfferModal")]
+    partial class PropertyOfferModal
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,38 @@ namespace ListingProperty.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ListingProperty.Models.ContactApproval", b =>
+                {
+                    b.Property<int>("ContactApprovalId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ContactApprovalId"));
+
+                    b.Property<int>("ApprovalStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ContactApprovalId");
+
+                    b.HasIndex("PropertyId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LpContactApproval");
+                });
 
             modelBuilder.Entity("ListingProperty.Models.FavoriteProperty", b =>
                 {
@@ -74,6 +106,38 @@ namespace ListingProperty.Migrations
                     b.HasIndex("PropertyId");
 
                     b.ToTable("LpImages");
+                });
+
+            modelBuilder.Entity("ListingProperty.Models.OfferModal", b =>
+                {
+                    b.Property<int>("OfferId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OfferId"));
+
+                    b.Property<bool>("AdminApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OfferCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("OfferLastDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OfferPrice")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OfferText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("SellerApproved")
+                        .HasColumnType("bit");
+
+                    b.HasKey("OfferId");
+
+                    b.ToTable("LpPropertyOffers");
                 });
 
             modelBuilder.Entity("ListingProperty.Models.Property", b =>
@@ -157,6 +221,11 @@ namespace ListingProperty.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("UserType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -164,6 +233,25 @@ namespace ListingProperty.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("LpUser");
+                });
+
+            modelBuilder.Entity("ListingProperty.Models.ContactApproval", b =>
+                {
+                    b.HasOne("ListingProperty.Models.Property", "Property")
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ListingProperty.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ListingProperty.Models.FavoriteProperty", b =>
