@@ -723,9 +723,13 @@ namespace ListingProperty.Controllers
             {
                 offers = await _context.LpPropertyOffers.Where(o => o.SellerId == UserId).ToListAsync();
             }
-            else if (UserType == "Buyer") // Corrected condition for buyer
+            else if (UserType == "Buyer") // so that the buyer can see his own offers
             {
                 offers = await _context.LpPropertyOffers.Where(o => o.BuyerId == UserId).ToListAsync();
+            }
+            else if(UserType == "Admin")
+            {
+                offers = await _context.LpPropertyOffers.ToListAsync();
             }
             else
             {
@@ -741,5 +745,34 @@ namespace ListingProperty.Controllers
                 return NotFound("No offers found.");
             }
         }
+
+        [HttpPost]
+        [Route("/OfferAction")]
+        public ActionResult OfferAction([FromBody] OfferModal sellerOfferDTO, string userType)
+        {
+            try
+            {
+                var sellerResp = _context.LpPropertyOffers.FirstOrDefault(x => x.SellerId == sellerOfferDTO.SellerId && x.PropertyId == sellerOfferDTO.PropertyId && x.BuyerId == sellerOfferDTO.BuyerId && x.OfferId == sellerOfferDTO.OfferId);
+
+                if (sellerResp == null) return BadRequest("Offer Not Found");
+
+                if(userType == "Seller")
+                {
+                    sellerResp.SellerStatus = sellerOfferDTO.SellerStatus;
+                } else
+                {
+                    sellerResp.AdminStatus = sellerOfferDTO.AdminStatus;
+                }
+
+                _context.SaveChanges();
+                return Ok(true);
+            }
+            catch (Exception)
+            {
+                return Ok(false);
+                //throw;
+            }
+        }
+
     }
 }
