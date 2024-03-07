@@ -727,7 +727,7 @@ namespace ListingProperty.Controllers
             {
                 offers = await _context.LpPropertyOffers.Where(o => o.BuyerId == UserId).ToListAsync();
             }
-            else if(UserType == "Admin")
+            else if (UserType == "Admin")
             {
                 offers = await _context.LpPropertyOffers.ToListAsync();
             }
@@ -756,10 +756,11 @@ namespace ListingProperty.Controllers
 
                 if (sellerResp == null) return BadRequest("Offer Not Found");
 
-                if(userType == "Seller")
+                if (userType == "Seller")
                 {
                     sellerResp.SellerStatus = sellerOfferDTO.SellerStatus;
-                } else
+                }
+                else
                 {
                     sellerResp.AdminStatus = sellerOfferDTO.AdminStatus;
                 }
@@ -771,6 +772,37 @@ namespace ListingProperty.Controllers
             {
                 return Ok(false);
                 //throw;
+            }
+        }
+
+        [HttpPost("Retry")]
+        public async Task<IActionResult> RetryOffer([FromBody] OfferModal updatedOffer)
+        {
+            try
+            {
+                var existingOffer = await _context.LpPropertyOffers.FirstOrDefaultAsync(o => o.OfferId == updatedOffer.OfferId);
+
+                if (existingOffer == null)
+                    return NotFound("Offer not found");
+
+                // Update existing offer with new data
+                existingOffer.OfferPrice = updatedOffer.OfferPrice;
+                existingOffer.OfferText = updatedOffer.OfferText;
+                existingOffer.OfferLastDate = updatedOffer.OfferLastDate;
+
+                // Set all statuses to pending
+                existingOffer.SellerStatus = Enums.ApprovalStatus.PendingApproval;
+                existingOffer.AdminStatus = Enums.ApprovalStatus.PendingApproval;
+                existingOffer.OfferStatus = Enums.ApprovalStatus.PendingApproval;
+
+                // Save changes to database
+                await _context.SaveChangesAsync();
+
+                return Ok("Offer retried successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 
