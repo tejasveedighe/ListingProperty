@@ -361,6 +361,7 @@ namespace ListingProperty.Controllers
                 return BadRequest(result.Error.Message);
             }
 
+
             var product = _context.lpProperty.Find(propertyId);
             if (product == null)
             {
@@ -791,6 +792,17 @@ namespace ListingProperty.Controllers
 
             _context.LpPayments.Add(payment);
 
+            // Add an entry to the LpOwnedProperties table
+            var ownedProperty = new OwnedProperties
+            {
+                Property = property,
+                Buyer = await _context.LpUser.FirstOrDefaultAsync(u => u.UserId == existingOffer.BuyerId),
+                Offer = existingOffer,
+                Transaction = payment
+            };
+
+            _context.LpOwnedProperties.Add(ownedProperty);
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -863,10 +875,21 @@ namespace ListingProperty.Controllers
                 Price = existingOffer.OfferPrice,
                 PaymentDate = DateTime.Now,
                 PaymentStatus = PaymentStatus.Complete,
-                PaymentType = PaymentType.Rent 
+                PaymentType = PaymentType.Rent
             };
 
             _context.LpPayments.Add(payment);
+
+            // Add an entry to the LpOwnedProperties table
+            var ownedProperty = new OwnedProperties
+            {
+                Property = property,
+                Buyer = await _context.LpUser.FirstOrDefaultAsync(u => u.UserId == existingOffer.BuyerId),
+                Offer = existingOffer,
+                Transaction = payment
+            };
+
+            _context.LpOwnedProperties.Add(ownedProperty);
 
             try
             {
@@ -875,6 +898,35 @@ namespace ListingProperty.Controllers
                 // Send a confirmation message
                 string confirmationMessage = "Property rented successfully.";
                 return Ok(confirmationMessage);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while processing the request: " + ex.Message);
+            }
+        }
+
+        [HttpGet("/getOwnedProperties")]
+        public async Task<IActionResult> GetOwnedProperties(int buyerId)
+        {
+            try
+            {
+                // Query the LpOwnedProperties table to retrieve owned properties for the specified buyer
+                var ownedProperties = await _context.LpOwnedProperties
+                    .Where(op => op.Buyer.UserId == buyerId)
+                    .Select(op => new
+                    {
+                        PropertyId = op.Property.PropertyId,
+                        PropertyTitle = op.Property.PropertyTitle,
+                        PropertyType = op.Property.PropertyType,
+                        Location = op.Property.Location,
+                        Price = op.Property.Price,
+                        OfferPrice = op.Offer.OfferPrice,
+                        PaymentDate = op.Transaction.PaymentDate,
+                        PaymentStatus = op.Transaction.PaymentStatus
+                    })
+                    .ToListAsync();
+
+                return Ok(ownedProperties);
             }
             catch (Exception ex)
             {

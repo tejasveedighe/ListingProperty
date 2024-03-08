@@ -19,6 +19,7 @@ namespace ListingProperty.Data
         public DbSet<ContactApproval> LpContactApproval { get; set; }
         public DbSet<OfferModal> LpPropertyOffers { get; set; }
         public DbSet<Payments> LpPayments { get; set; }
+        public DbSet<OwnedProperties> LpOwnedProperties { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
