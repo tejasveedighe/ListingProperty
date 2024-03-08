@@ -18,6 +18,7 @@ namespace ListingProperty.Data
         public DbSet<Image> LpImages { get; set; }
         public DbSet<ContactApproval> LpContactApproval { get; set; }
         public DbSet<OfferModal> LpPropertyOffers { get; set; }
+        public DbSet<Payments> LpPayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
