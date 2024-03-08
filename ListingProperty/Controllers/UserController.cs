@@ -919,6 +919,7 @@ namespace ListingProperty.Controllers
                         PropertyTitle = op.Property.PropertyTitle,
                         PropertyType = op.Property.PropertyType,
                         Location = op.Property.Location,
+                        Status = op.Property.Status,
                         Price = op.Property.Price,
                         OfferPrice = op.Offer.OfferPrice,
                         PaymentDate = op.Transaction.PaymentDate,
@@ -934,5 +935,18 @@ namespace ListingProperty.Controllers
             }
         }
 
+        [HttpGet("/getAllPayments")]
+        public async Task<IActionResult> GetAllPayments()
+        {
+            try
+            {
+                var payments = await _context.LpPayments.ToListAsync();
+                return Ok(payments);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, "An error occurred while processing the request: " + ex.Message);
+            }
+        }
     }
 }
