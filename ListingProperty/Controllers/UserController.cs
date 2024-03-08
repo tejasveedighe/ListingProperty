@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using ListingProperty.Data;
+using ListingProperty.Enums;
 using ListingProperty.Helper;
 using ListingProperty.Models;
 using ListingProperty.Repository.Implementation;
@@ -216,84 +217,6 @@ namespace ListingProperty.Controllers
             .ToList();
 
             return Ok(combinedData);
-        }
-
-        [HttpPost]
-        [Route("/BuyProperty")]
-        public async Task<IActionResult> BuyProperty([FromBody] BuyRentModel searchCriteria)
-        {
-            if (searchCriteria == null)
-            {
-                return BadRequest("Invalid offer");
-            }
-
-            var query = _context.lpProperty.AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchCriteria.Status))
-            {
-                query = query.Where(p => p.Status == searchCriteria.Status);
-            }
-
-            var searchResults = await query.ToListAsync();
-
-            var saleProperties = searchResults
-                .Where(p => p.Status == "Sale")
-                .Select(property => new
-                {
-                    PropertyId = property.PropertyId,
-                    PropertyTitle = property.PropertyTitle,
-                    PropertyType = property.PropertyType,
-                    Location = property.Location,
-                    Price = property.Price,
-                    Images = _context
-                        .LpImages.Where(img => img.PropertyId == property.PropertyId)
-                        .Select(img => new { ImageUrl = img.ImageUrl })
-                        .ToList(),
-                    ContactNumber = property.ContactNumber,
-                    Status = property.Status
-                })
-            .ToList();
-
-            return Ok(saleProperties);
-        }
-
-        [HttpPost]
-        [Route("/RentProperty")]
-        public async Task<IActionResult> RentProperty([FromBody] BuyRentModel searchCriteria)
-        {
-            if (searchCriteria == null)
-            {
-                return BadRequest("Invalid search criteria");
-            }
-
-            var query = _context.lpProperty.AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchCriteria.Status))
-            {
-                query = query.Where(p => p.Status == searchCriteria.Status);
-            }
-
-            var searchResults = await query.ToListAsync();
-
-            var saleProperties = searchResults
-                .Where(p => p.Status == "Rent")
-                .Select(property => new
-                {
-                    PropertyId = property.PropertyId,
-                    PropertyTitle = property.PropertyTitle,
-                    PropertyType = property.PropertyType,
-                    Location = property.Location,
-                    Price = property.Price,
-                    Images = _context
-                        .LpImages.Where(img => img.PropertyId == property.PropertyId)
-                        .Select(img => new { ImageUrl = img.ImageUrl })
-                        .ToList(),
-                    ContactNumber = property.ContactNumber,
-                    Status = property.Status
-                })
-            .ToList();
-
-            return Ok(saleProperties);
         }
 
         [HttpPut]
@@ -679,7 +602,7 @@ namespace ListingProperty.Controllers
                 OfferLastDate = offer.OfferLastDate,
                 SellerStatus = Enums.ApprovalStatus.PendingApproval,
                 AdminStatus = Enums.ApprovalStatus.PendingApproval,
-                OfferStatus = Enums.ApprovalStatus.PendingApproval,
+                OfferStatus = Enums.PaymentStatus.Pending,
                 PropertyId = offer.PropertyId,
                 SellerId = offer.SellerId,
                 BuyerId = offer.BuyerId
@@ -792,7 +715,7 @@ namespace ListingProperty.Controllers
                 // Set all statuses to pending
                 existingOffer.SellerStatus = Enums.ApprovalStatus.PendingApproval;
                 existingOffer.AdminStatus = Enums.ApprovalStatus.PendingApproval;
-                existingOffer.OfferStatus = Enums.ApprovalStatus.PendingApproval;
+                existingOffer.OfferStatus = Enums.PaymentStatus.Pending;
 
                 // Save changes to database
                 await _context.SaveChangesAsync();
@@ -804,5 +727,160 @@ namespace ListingProperty.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpPost]
+        [Route("/BuyProperty")]
+        public async Task<IActionResult> BuyProperty([FromBody] OfferModal offer)
+        {
+            if (offer == null)
+            {
+                return BadRequest("Invalid offer");
+            }
+
+            // Find the offer in the database
+            var existingOffer = await _context.LpPropertyOffers.FirstOrDefaultAsync(o => o.OfferId == offer.OfferId);
+
+            if (existingOffer == null)
+            {
+                return BadRequest("Offer not found");
+            }
+
+            // Check if the offer status is correct for payment
+            if (existingOffer.AdminStatus != ApprovalStatus.Approved || existingOffer.SellerStatus != ApprovalStatus.Approved)
+            {
+                return BadRequest("Offer is not approved for payment");
+            }
+
+            // Find the property associated with the offer
+            var property = await _context.lpProperty.FirstOrDefaultAsync(p => p.PropertyId == existingOffer.PropertyId);
+
+            if (property == null)
+            {
+                return BadRequest("Property not found");
+            }
+
+            // Check if the property status is Sale
+            if (property.Status != "Sale")
+            {
+                return BadRequest("Property is not available for sale");
+            }
+
+            // Check if the property has already been sold
+            if (property.Status == "Sold")
+            {
+                return BadRequest("Property has already been sold");
+            }
+
+            // Update the property status to Sold
+            property.Status = "Sold";
+
+            // Update the offer status to Complete
+            existingOffer.OfferStatus = PaymentStatus.Complete;
+
+            // Add payment details to the LpPayments table
+            var payment = new Payments
+            {
+                PropertyId = property.PropertyId,
+                SellerId = existingOffer.SellerId,
+                BuyerId = existingOffer.BuyerId,
+                Price = existingOffer.OfferPrice,
+                PaymentDate = DateTime.Now,
+                PaymentStatus = PaymentStatus.Complete,
+                PaymentType = PaymentType.Buy
+            };
+
+            _context.LpPayments.Add(payment);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Send a confirmation message
+                string confirmationMessage = "Property purchased successfully.";
+                return Ok(confirmationMessage);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while processing the request: " + ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("/RentProperty")]
+        public async Task<IActionResult> RentProperty([FromBody] OfferModal offer)
+        {
+            if (offer == null)
+            {
+                return BadRequest("Invalid offer");
+            }
+
+            // Find the offer in the database
+            var existingOffer = await _context.LpPropertyOffers.FirstOrDefaultAsync(o => o.OfferId == offer.OfferId);
+
+            if (existingOffer == null)
+            {
+                return BadRequest("Offer not found");
+            }
+
+            // Check if the offer status is correct for payment
+            if (existingOffer.AdminStatus != ApprovalStatus.Approved || existingOffer.SellerStatus != ApprovalStatus.Approved)
+            {
+                return BadRequest("Offer is not approved for payment");
+            }
+
+            // Find the property associated with the offer
+            var property = await _context.lpProperty.FirstOrDefaultAsync(p => p.PropertyId == existingOffer.PropertyId);
+
+            if (property == null)
+            {
+                return BadRequest("Property not found");
+            }
+
+            // Check if the property status is Rent
+            if (property.Status != "Rent")
+            {
+                return BadRequest("Property is not available for rent");
+            }
+
+            // Check if the property has already been rented
+            if (property.Status == "Rented")
+            {
+                return BadRequest("Property has already been rented");
+            }
+
+            // Update the property status to Rented
+            property.Status = "Rented";
+
+            // Update the offer status to Complete
+            existingOffer.OfferStatus = PaymentStatus.Complete;
+
+            // Add payment details to the LpPayments table
+            var payment = new Payments
+            {
+                PropertyId = property.PropertyId,
+                SellerId = existingOffer.SellerId,
+                BuyerId = existingOffer.BuyerId,
+                Price = existingOffer.OfferPrice,
+                PaymentDate = DateTime.Now,
+                PaymentStatus = PaymentStatus.Complete,
+                PaymentType = PaymentType.Rent 
+            };
+
+            _context.LpPayments.Add(payment);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Send a confirmation message
+                string confirmationMessage = "Property rented successfully.";
+                return Ok(confirmationMessage);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while processing the request: " + ex.Message);
+            }
+        }
+
     }
 }

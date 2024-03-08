@@ -12,7 +12,7 @@ namespace ListingProperty.Models
         public DateTime OfferLastDate { get; set; }
         public Enums.ApprovalStatus SellerStatus { get; set; }
         public Enums.ApprovalStatus AdminStatus { get; set; }
-        public Enums.ApprovalStatus OfferStatus { get; set; }
+        public Enums.PaymentStatus OfferStatus { get; set; }
 
         public int PropertyId { get; set; }
         public int SellerId { get; set; }
