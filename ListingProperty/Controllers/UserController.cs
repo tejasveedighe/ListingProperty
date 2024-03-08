@@ -905,7 +905,7 @@ namespace ListingProperty.Controllers
             }
         }
 
-        [HttpGet("/getOwnedProperties")]
+        [HttpGet("/getOwnedProperties/{buyerId}")]
         public async Task<IActionResult> GetOwnedProperties(int buyerId)
         {
             try
