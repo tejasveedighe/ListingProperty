@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ListingProperty.Migrations
 {
     [DbContext(typeof(AppContextDb))]
-    [Migration("20240308074746_PaymentsModel")]
-    partial class PaymentsModel
+    [Migration("20240308080548_Payments")]
+    partial class Payments
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -164,6 +164,9 @@ namespace ListingProperty.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("PaymentStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PaymentType")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")

@@ -224,7 +224,7 @@ namespace ListingProperty.Controllers
         {
             if (searchCriteria == null)
             {
-                return BadRequest("Invalid search criteria");
+                return BadRequest("Invalid offer");
             }
 
             var query = _context.lpProperty.AsQueryable();
@@ -364,9 +364,8 @@ namespace ListingProperty.Controllers
                 NoBedroom = product.NoBedroom,
                 NoBathroom = product.NoBathroom,
                 SquareFeet = product.SquareFeet,
-                Description = product.Description
-
-
+                Description = product.Description,
+                Status = product.Status
             };
             // case to check is there a entry in table related to propertyId and userId, if not then assign new as approval status
             if (propertyStatus == null)
@@ -805,6 +804,5 @@ namespace ListingProperty.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
     }
 }
