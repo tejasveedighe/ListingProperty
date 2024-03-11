@@ -21,6 +21,8 @@ namespace ListingProperty.Data
         public DbSet<Payments> LpPayments { get; set; }
         public DbSet<OwnedProperties> LpOwnedProperties { get; set; }
 
+        public DbSet<Amenities> LpPropertyAmenities { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
