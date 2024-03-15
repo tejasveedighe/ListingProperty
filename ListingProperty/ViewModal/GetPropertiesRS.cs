@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ListingProperty.Migrations;
+using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Text.Json.Serialization;
 
@@ -26,5 +27,6 @@ namespace ListingProperty.ViewModal
         public Boolean Approved { get; set; }
         public Models.FavoriteProperty FavoriteProperty { get; set; }
         public Enums.ApprovalStatus ApprovalStatus { get; set; }    
+        public Models.Amenities? Amenities { get; set; }
     }
 }

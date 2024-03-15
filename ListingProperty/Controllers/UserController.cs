@@ -130,6 +130,7 @@ namespace ListingProperty.Controllers
                         DateListed = property.DateListed,
                         DateUpdated = property.DateUpdated,
                         Approved = property.Approved,
+                        Amenities = property.Amenities,
 
                         ImageId = img != null ? img.Id : -1,
                         PublicID = img != null ? img.PublicID : "",
@@ -249,7 +250,7 @@ namespace ListingProperty.Controllers
         [Route("/Property/{propertyId}")]
         public async Task<IActionResult> GetPropertyById(int propertyId)
         {
-            var product = await _context.lpProperty.FirstOrDefaultAsync(w =>
+            var product = await _context.lpProperty.Include(p => p.Amenities).FirstOrDefaultAsync(w =>
                 w.PropertyId == propertyId
             );
             var response = new GetPropertiesRS()
@@ -264,7 +265,17 @@ namespace ListingProperty.Controllers
                 NoBedroom = product.NoBedroom,
                 NoBathroom = product.NoBathroom,
                 SquareFeet = product.SquareFeet,
-                Description = product.Description
+                Description = product.Description,
+                Status = product.Status,
+                Amenities = new Amenities
+                {
+                    SwimmingPool = product.Amenities?.SwimmingPool ?? false,
+                    Parking = product.Amenities?.Parking ?? false,
+                    Lifts = product.Amenities?.Lifts ?? false,
+                    Temple = product.Amenities?.Temple ?? false,
+                    RooftopAccess = product.Amenities?.RooftopAccess ?? false,
+                    Parks = product.Amenities?.Parks ?? false
+                }
             };
             return Ok(response);
         }
@@ -273,7 +284,7 @@ namespace ListingProperty.Controllers
         [Route("/Property/{userId}/{propertyId}")]
         public async Task<IActionResult> GetPropertyByUserId(int userId, int propertyId)
         {
-            var product = await _context.lpProperty.FirstOrDefaultAsync(w => w.PropertyId == propertyId);
+            var product = await _context.lpProperty.Include(p => p.Amenities).FirstOrDefaultAsync(w => w.PropertyId == propertyId);
             var propertyStatus = await _context.LpContactApproval.FirstOrDefaultAsync(x => x.UserId == userId && x.PropertyId == propertyId);
             var response = new GetPropertiesRS()
             {
@@ -288,7 +299,18 @@ namespace ListingProperty.Controllers
                 NoBathroom = product.NoBathroom,
                 SquareFeet = product.SquareFeet,
                 Description = product.Description,
-                Status = product.Status
+                Status = product.Status,
+
+                Amenities = new Amenities
+                {
+                    SwimmingPool = product.Amenities?.SwimmingPool ?? false,
+                    Parking = product.Amenities?.Parking ?? false,
+                    Lifts = product.Amenities?.Lifts ?? false,
+                    Temple = product.Amenities?.Temple ?? false,
+                    RooftopAccess = product.Amenities?.RooftopAccess ?? false,
+                    Parks = product.Amenities?.Parks ?? false
+                }
+
             };
             // case to check is there a entry in table related to propertyId and userId, if not then assign new as approval status
             if (propertyStatus == null)
@@ -943,10 +965,111 @@ namespace ListingProperty.Controllers
                 var payments = await _context.LpPayments.ToListAsync();
                 return Ok(payments);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return StatusCode(500, "An error occurred while processing the request: " + ex.Message);
             }
+        }
+
+        [HttpGet("/adminDashboard")]
+        public async Task<IActionResult> GetDashboardData()
+        {
+            try
+            {
+                // Get counts
+                int paymentsCount = await _context.LpPayments.CountAsync();
+                int offersCount = await _context.LpPropertyOffers.CountAsync();
+                int propertiesCount = await _context.lpProperty.CountAsync();
+
+                // Get count of buyers
+                int buyersCount = await _context.LpUser
+                    .Where(u => u.UserType == "Buyer")
+                    .CountAsync();
+
+                // Get payments made this month
+                DateTime currentDate = DateTime.Now;
+                DateTime startDateOfMonth = new DateTime(currentDate.Year, currentDate.Month, 1);
+                int paymentsThisMonthCount = await _context.LpPayments
+                    .Where(p => p.PaymentDate >= startDateOfMonth && p.PaymentDate <= currentDate)
+                    .CountAsync();
+
+                // Get total sum of payment amounts
+                decimal totalPaymentsAmount = await _context.LpPayments.SumAsync(p => p.Price);
+
+                // Prepare data to return
+                var data = new
+                {
+                    paymentsCount,
+                    offersCount,
+                    propertiesCount,
+                    buyersCount,
+                    paymentsThisMonthCount,
+                    totalPaymentsAmount
+                };
+
+                // Return data as JSON
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                // Return error message
+                return StatusCode(500, "An Error Occurred while processing the request: " + ex.Message);
+            }
+        }
+
+        [HttpPut("/editProperty/{id}")]
+        public async Task<IActionResult> UpdateProperty(int id, [FromBody] Property property)
+        {
+            if (id != property.PropertyId)
+            {
+                return BadRequest();
+            }
+
+            var existingProperty = await _context.lpProperty.FindAsync(id);
+            if (existingProperty == null)
+            {
+                return NotFound();
+            }
+
+            // Update existing property with new values
+            existingProperty.PropertyTitle = property.PropertyTitle;
+            existingProperty.PropertyType = property.PropertyType;
+            existingProperty.Location = property.Location;
+            existingProperty.Price = property.Price;
+            existingProperty.NoBedroom = property.NoBedroom;
+            existingProperty.NoBathroom = property.NoBathroom;
+            existingProperty.SquareFeet = property.SquareFeet;
+            existingProperty.Description = property.Description;
+            existingProperty.Images = property.Images; // Assuming you want to replace the entire collection
+            existingProperty.ContactNumber = property.ContactNumber;
+            existingProperty.Status = property.Status;
+            existingProperty.DateUpdated = DateTime.Now;
+            existingProperty.Approved = property.Approved;
+            existingProperty.Amenities = property.Amenities;
+
+            try
+            {
+                _context.Entry(existingProperty).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PropertyExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        private bool PropertyExists(int id)
+        {
+            return _context.lpProperty.Any(e => e.PropertyId == id);
         }
     }
 }
